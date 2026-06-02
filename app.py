@@ -11,15 +11,17 @@ st.set_page_config(
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# LOGIN NATIVO
-if "user" not in st.session_state or st.session_state.user is None:
+# ==================== LOGIN ====================
+if "user" not in st.session_state or st.session_state.get("user") is None:
     st.login(provider="google")
     st.stop()
 
 user = get_current_user()
+# ==============================================
 
 render_header()
-st.markdown(f"**Bienvenido, {user.get('name', user.get('email', 'Usuario'))}** 👋")
+
+st.markdown(f"**Bienvenido, {user.get('name', user.get('email', 'Usuario'))}** 👋", unsafe_allow_html=True)
 
 tab1, tab2, tab3, tab4 = st.tabs(["⚽ Mis Pronósticos", "🏆 Tabla de Posiciones", "📊 Resultados", "🌟 Bonus Final"])
 
