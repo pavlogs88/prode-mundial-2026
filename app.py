@@ -9,14 +9,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Cargar CSS
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ==================== LOGIN NATIVO GOOGLE ====================
 init_auth()
+user = get_current_user()
+render_header()
 
-if "user" not in st.session_state or st.session_state.user is None:
+if not user:
     st.markdown("""
     <div class="hero-container">
         <div class="hero-badge">⚽ MUNDIAL 2026</div>
@@ -30,32 +30,53 @@ if "user" not in st.session_state or st.session_state.user is None:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown("### 🔐 Ingresá con tu cuenta Google")
         st.markdown("Compartí el link con tus amigos para que se unan al prode.")
-        
-        # Login nativo de Streamlit
-        if st.button("🌐 Continuar con Google", type="primary", use_container_width=True):
-            st.login(provider="google")
-        
+
+        from streamlit_oauth import OAuth2Component
+
+        CLIENT_ID = st.secrets.get("GOOGLE_CLIENT_ID", "")
+        CLIENT_SECRET = st.secrets.get("GOOGLE_CLIENT_SECRET", "")
+        REDIRECT_URI = st.secrets.get("REDIRECT_URI", "")
+
+        if CLIENT_ID and CLIENT_SECRET and REDIRECT_URI:
+            oauth2 = OAuth2Component(
+                client_id=CLIENT_ID,
+                client_secret=CLIENT_SECRET,
+                authorize_endpoint="https://accounts.google.com/o/oauth2/auth",
+                token_endpoint="https://oauth2.googleapis.com/token",
+                refresh_token_endpoint="https://oauth2.googleapis.com/token",
+                revoke_token_endpoint="https://oauth2.googleapis.com/revoke",
+            )
+            result = oauth2.authorize_button(
+                name="Continuar con Google",
+                icon="https://www.google.com.tw/favicon.ico",
+                redirect_uri=REDIRECT_URI,
+                scope="openid email profile",
+                key="google_oauth",
+                extras_params={"prompt": "select_account"},
+                use_container_width=True,
+                pkce="S256",
+            )
+            if result and "token" in result:
+                from auth import process_login_token
+                process_login_token(result["token"])
+                st.rerun()
+        else:
+            st.error("Faltan credenciales de Google en secrets.toml")
+
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Reglas de puntuación
     st.markdown("---")
-    col1, col2, col3, col4, col5 = st.columns(5)
-    with col1:
-        st.markdown('<div class="rule-card"><div class="rule-pts">3</div><div class="rule-label">pts por resultado exacto</div></div>', unsafe_allow_html=True)
-    with col2:
-        st.markdown('<div class="rule-card"><div class="rule-pts">1</div><div class="rule-label">pt por acertar ganador/empate</div></div>', unsafe_allow_html=True)
-    with col3:
-        st.markdown('<div class="rule-card"><div class="rule-pts">1</div><div class="rule-label">pt por goles de un equipo</div></div>', unsafe_allow_html=True)
-    with col4:
-        st.markdown('<div class="rule-card"><div class="rule-pts">0.5</div><div class="rule-label">pts por diferencia de goles</div></div>', unsafe_allow_html=True)
-    with col5:
-        st.markdown('<div class="rule-card"><div class="rule-pts">10</div><div class="rule-label">pts bonus goleador/MVP final</div></div>', unsafe_allow_html=True)
+    cols = st.columns(5)
+    rules = [("3", "pts por resultado exacto"), ("1", "pt por acertar ganador/empate"),
+             ("1", "pt por goles de un equipo"), ("0.5", "pts por diferencia de goles"),
+             ("10", "pts bonus goleador/MVP final")]
+    for col, (pts, label) in zip(cols, rules):
+        with col:
+            st.markdown(f'<div class="rule-card"><div class="rule-pts">{pts}</div><div class="rule-label">{label}</div></div>', unsafe_allow_html=True)
 
 else:
-    user = get_current_user()
-    render_header()
-    
-    st.markdown(f'<p class="welcome-text">Bienvenido, <strong>{user.get("name", user.get("email", "Usuario"))}</strong>! 👋</p>', unsafe_allow_html=True)
+    st.markdown(f'<p class="welcome-text">Bienvenido, <strong>{user.get("name", "Usuario")}</strong>! 👋</p>', unsafe_allow_html=True)
     
     tab1, tab2, tab3, tab4 = st.tabs(["⚽ Mis Pronósticos", "🏆 Tabla de Posiciones", "📊 Resultados", "🌟 Bonus Final"])
     
@@ -72,6 +93,6 @@ else:
         from pages_modules.bonus import render_bonus
         render_bonus(user)
 
-    logout()  # Botón de cerrar sesión
+    logout()
 
 render_footer()
