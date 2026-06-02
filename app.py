@@ -60,16 +60,16 @@ else:
     tab1, tab2, tab3, tab4 = st.tabs(["⚽ Mis Pronósticos", "🏆 Tabla de Posiciones", "📊 Resultados", "🌟 Bonus Final"])
     
     with tab1:
-        from pages.pronosticos import render_pronosticos
+        from pages_modules.pronosticos import render_pronosticos
         render_pronosticos(user)
     with tab2:
-        from pages.tabla import render_tabla
+        from pages_modules.tabla import render_tabla
         render_tabla()
     with tab3:
-        from pages.resultados import render_resultados
+        from pages_modules.resultados import render_resultados
         render_resultados(user)
     with tab4:
-        from pages.bonus import render_bonus
+        from pages_modules.bonus import render_bonus
         render_bonus(user)
 
     logout()  # Botón de cerrar sesión
