@@ -38,7 +38,7 @@ if not user:
         st.markdown("### 🔐 Ingresá con tu cuenta Google")
         st.markdown("Compartí el link con tus amigos para que se unan al prode.")
 
-                from streamlit_oauth import OAuth2Component
+        from streamlit_oauth import OAuth2Component
 
         CLIENT_ID = st.secrets.get("GOOGLE_CLIENT_ID", "")
         CLIENT_SECRET = st.secrets.get("GOOGLE_CLIENT_SECRET", "")
