@@ -1,5 +1,5 @@
 import streamlit as st
-from auth import init_auth, get_current_user, logout, get_google_auth_url, process_login
+from auth import init_auth, get_current_user, logout
 from ui_components import render_header, render_footer
 
 st.set_page_config(
@@ -9,23 +9,10 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Load custom CSS
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 init_auth()
-
-# Handle OAuth callback — Google redirects back with ?code=...
-query_params = st.query_params
-code = query_params.get("code")
-
-if code and not st.session_state.get("oauth_code_used") == code:
-    with st.spinner("Iniciando sesión..."):
-        process_login(code)
-    # Clean the URL
-    st.query_params.clear()
-    st.rerun()
-
 user = get_current_user()
 render_header()
 
@@ -44,18 +31,37 @@ if not user:
         st.markdown("### 🔐 Ingresá con tu cuenta Google")
         st.markdown("Compartí el link con tus amigos para que se unan al prode.")
 
-        auth_url = get_google_auth_url()
-        st.markdown(f'''<a href="{auth_url}" target="_self" style="text-decoration:none;">
-            <div style="width:100%;padding:0.75rem 1rem;background:white;color:#333;
-                border:1px solid #ddd;border-radius:8px;font-size:1rem;
-                font-weight:600;cursor:pointer;text-align:center;">
-                <img src="https://www.google.com/favicon.ico" width="18" style="vertical-align:middle;margin-right:8px"/>
-                Continuar con Google
-            </div>
-        </a>''', unsafe_allow_html=True)
+        from streamlit_oauth import OAuth2Component
+
+        CLIENT_ID = st.secrets.get("GOOGLE_CLIENT_ID", "")
+        CLIENT_SECRET = st.secrets.get("GOOGLE_CLIENT_SECRET", "")
+        REDIRECT_URI = st.secrets.get("REDIRECT_URI", "http://localhost:8501")
+
+        if CLIENT_ID and CLIENT_SECRET:
+            oauth2 = OAuth2Component(
+                client_id=CLIENT_ID,
+                client_secret=CLIENT_SECRET,
+                authorize_endpoint="https://accounts.google.com/o/oauth2/auth",
+                token_endpoint="https://oauth2.googleapis.com/token",
+                refresh_token_endpoint="https://oauth2.googleapis.com/token",
+                revoke_token_endpoint="https://oauth2.googleapis.com/revoke",
+            )
+            result = oauth2.authorize_button(
+                name="Continuar con Google",
+                icon="https://www.google.com.tw/favicon.ico",
+                redirect_uri=REDIRECT_URI,
+                scope="openid email profile",
+                key="google_oauth",
+                extras_params={"prompt": "select_account"},
+                use_container_width=True,
+                pkce="S256",
+            )
+            if result and "token" in result:
+                from auth import process_login_token
+                process_login_token(result["token"])
+                st.rerun()
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Scoring rules
     st.markdown("---")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
@@ -71,21 +77,16 @@ if not user:
 
 else:
     st.markdown(f'<p class="welcome-text">Bienvenido, <strong>{user["name"]}</strong>! 👋</p>', unsafe_allow_html=True)
-
     tab1, tab2, tab3, tab4 = st.tabs(["⚽ Mis Pronósticos", "🏆 Tabla de Posiciones", "📊 Resultados", "🌟 Bonus Final"])
-
     with tab1:
         from pages.pronosticos import render_pronosticos
         render_pronosticos(user)
-
     with tab2:
         from pages.tabla import render_tabla
         render_tabla()
-
     with tab3:
         from pages.resultados import render_resultados
         render_resultados(user)
-
     with tab4:
         from pages.bonus import render_bonus
         render_bonus(user)
