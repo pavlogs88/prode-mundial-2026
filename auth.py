@@ -1,39 +1,46 @@
+# auth.py
 import streamlit as st
-import requests
-from database import get_or_create_user
+from supabase import create_client, Client
+from datetime import datetime
 
+@st.cache_resource
+def get_supabase() -> Client:
+    return create_client(
+        st.secrets["SUPABASE_URL"],
+        st.secrets["SUPABASE_ANON_KEY"]
+    )
 
-def init_auth():
+def login_with_google():
+    """Inicia login con Google usando Supabase"""
+    supabase = get_supabase()
+    
     if "user" not in st.session_state:
-        st.session_state.user = None
-
+        # Redirigir a login de Supabase con Google
+        res = supabase.auth.sign_in_with_oauth(
+            provider="google",
+            options={"redirect_to": st.secrets["REDIRECT_URI"]}
+        )
+        st.session_state.auth_url = res.url
+        st.rerun()
 
 def get_current_user():
-    return st.session_state.get("user")
-
-
-def process_login_token(token: dict):
+    supabase = get_supabase()
     try:
-        access_token = token.get("access_token")
-        resp = requests.get(
-            "https://www.googleapis.com/oauth2/v2/userinfo",
-            headers={"Authorization": f"Bearer {access_token}"},
-            timeout=10,
-        )
-        resp.raise_for_status()
-        info = resp.json()
-        user = {
-            "id": info["id"],
-            "email": info["email"],
-            "name": info.get("name", info["email"].split("@")[0]),
-            "picture": info.get("picture", ""),
-        }
-        get_or_create_user(user)
-        st.session_state.user = user
-    except Exception as e:
-        st.error(f"Error al iniciar sesión: {e}")
-
+        session = supabase.auth.get_session()
+        if session and session.user:
+            return {
+                "id": session.user.id,
+                "email": session.user.email,
+                "name": session.user.user_metadata.get("name", session.user.email.split("@")[0]),
+                "picture": session.user.user_metadata.get("avatar_url", "")
+            }
+    except:
+        pass
+    return None
 
 def logout():
-    st.session_state.clear()
-    st.rerun()
+    if st.sidebar.button("🚪 Cerrar Sesión", use_container_width=True):
+        supabase = get_supabase()
+        supabase.auth.sign_out()
+        st.session_state.clear()
+        st.rerun()
