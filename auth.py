@@ -15,13 +15,20 @@ def login_with_google():
     supabase = get_supabase()
     
     if "user" not in st.session_state:
-        # Redirigir a login de Supabase con Google
-        res = supabase.auth.sign_in_with_oauth(
-            provider="google",
-            options={"redirect_to": st.secrets["REDIRECT_URI"]}
-        )
-        st.session_state.auth_url = res.url
-        st.rerun()
+        try:
+            res = supabase.auth.sign_in_with_oauth(
+                provider="google",
+                options={
+                    "redirect_to": st.secrets["REDIRECT_URI"]
+                }
+            )
+            if res and res.url:
+                st.session_state.auth_url = res.url
+                st.rerun()
+            else:
+                st.error("No se pudo generar la URL de login")
+        except Exception as e:
+            st.error(f"Error al iniciar login con Google: {str(e)}")
 
 def get_current_user():
     supabase = get_supabase()
