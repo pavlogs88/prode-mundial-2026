@@ -38,7 +38,7 @@ if not user:
         st.markdown("### 🔐 Ingresá con tu cuenta Google")
         st.markdown("Compartí el link con tus amigos para que se unan al prode.")
 
-        from streamlit_oauth import OAuth2Component
+                from streamlit_oauth import OAuth2Component
 
         CLIENT_ID = st.secrets.get("GOOGLE_CLIENT_ID", "")
         CLIENT_SECRET = st.secrets.get("GOOGLE_CLIENT_SECRET", "")
@@ -54,34 +54,23 @@ if not user:
                 revoke_token_endpoint="https://oauth2.googleapis.com/revoke",
             )
 
-            # Fix importante: Generar un state único
-            if "oauth_state" not in st.session_state:
-                st.session_state.oauth_state = str(uuid.uuid4())
-
             result = oauth2.authorize_button(
                 name="Continuar con Google",
                 icon="https://www.google.com.tw/favicon.ico",
                 redirect_uri=REDIRECT_URI,
                 scope="openid email profile",
-                key="google_oauth",
-                extras_params={
-                    "prompt": "select_account", 
-                    "access_type": "offline"
-                },
+                key="google_oauth_login",           # Cambié la key
+                extras_params={"prompt": "select_account"},
                 use_container_width=True,
                 pkce="S256",
-                state=st.session_state.oauth_state,   # ← Esto ayuda
             )
 
             if result and "token" in result:
                 from auth import process_login_token
                 process_login_token(result["token"])
-                # Limpiar state después de login exitoso
-                if "oauth_state" in st.session_state:
-                    del st.session_state.oauth_state
                 st.rerun()
         else:
-            st.error("Faltan credenciales de Google en secrets.toml")
+            st.error("❌ Faltan credenciales en secrets.toml")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
