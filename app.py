@@ -2,24 +2,26 @@ import streamlit as st
 from auth import get_current_user, logout
 from ui_components import render_header, render_footer
 
-st.set_page_config(page_title="Prode Mundial 2026 🏆", layout="wide")
+st.set_page_config(
+    page_title="Prode Mundial 2026 🏆",
+    page_icon="⚽",
+    layout="wide"
+)
 
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ==================== LOGIN NATIVO ====================
-if "user" not in st.session_state:
+# LOGIN NATIVO
+if "user" not in st.session_state or st.session_state.user is None:
     st.login(provider="google")
     st.stop()
 
 user = get_current_user()
-# ====================================================
 
 render_header()
-
 st.markdown(f"**Bienvenido, {user.get('name', user.get('email', 'Usuario'))}** 👋")
 
-tab1, tab2, tab3, tab4 = st.tabs(["⚽ Mis Pronósticos", "🏆 Tabla", "📊 Resultados", "🌟 Bonus"])
+tab1, tab2, tab3, tab4 = st.tabs(["⚽ Mis Pronósticos", "🏆 Tabla de Posiciones", "📊 Resultados", "🌟 Bonus Final"])
 
 with tab1:
     from pages_modules.pronosticos import render_pronosticos
