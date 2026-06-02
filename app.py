@@ -58,6 +58,7 @@ if not user:
                 key="google_oauth",
                 extras_params={"prompt": "consent", "access_type": "offline"},
                 use_container_width=True,
+                pkce="S256",
             )
 
             if result and "token" in result:
