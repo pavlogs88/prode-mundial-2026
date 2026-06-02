@@ -10,29 +10,28 @@ def get_supabase() -> Client:
     )
 
 def login_with_google():
-    """Inicia login con Google usando Supabase"""
+    """Versión simplificada para debug"""
+    st.info("🔄 Intentando redirigir a Google...")   # ← Esto debería verse
+    
     supabase = get_supabase()
     
-    if "user" not in st.session_state:
-        try:
-            # Nueva forma recomendada
-            response = supabase.auth.sign_in_with_oauth(
-                {
-                    "provider": "google",
-                    "options": {
-                        "redirect_to": st.secrets["REDIRECT_URI"]
-                    }
-                }
-            )
+    try:
+        response = supabase.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {
+                "redirect_to": st.secrets["REDIRECT_URI"]
+            }
+        })
+        
+        if response and response.url:
+            st.success("URL generada correctamente")
+            st.session_state.auth_url = response.url
+            st.rerun()
+        else:
+            st.error("No se recibió URL de login")
             
-            if response and response.url:
-                st.session_state.auth_url = response.url
-                st.rerun()
-            else:
-                st.error("No se pudo obtener la URL de login")
-                
-        except Exception as e:
-            st.error(f"Error al iniciar login con Google: {str(e)}")
+    except Exception as e:
+        st.error(f"❌ Error: {str(e)}")
 
 def get_current_user():
     supabase = get_supabase()
@@ -42,11 +41,11 @@ def get_current_user():
             return {
                 "id": session.user.id,
                 "email": session.user.email,
-                "name": session.user.user_metadata.get("name", session.user.email.split("@")[0]),
+                "name": session.user.user_metadata.get("name", "Usuario"),
                 "picture": session.user.user_metadata.get("avatar_url", "")
             }
-    except Exception as e:
-        st.error(f"Error al obtener usuario: {str(e)}")
+    except:
+        pass
     return None
 
 def logout():
