@@ -9,14 +9,14 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Cargar CSS
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
+# ==================== LOGIN NATIVO GOOGLE ====================
 init_auth()
-user = get_current_user()
-render_header()
 
-if not user:
+if "user" not in st.session_state or st.session_state.user is None:
     st.markdown("""
     <div class="hero-container">
         <div class="hero-badge">⚽ MUNDIAL 2026</div>
@@ -30,38 +30,14 @@ if not user:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown("### 🔐 Ingresá con tu cuenta Google")
         st.markdown("Compartí el link con tus amigos para que se unan al prode.")
-
-        from streamlit_oauth import OAuth2Component
-
-        CLIENT_ID = st.secrets.get("GOOGLE_CLIENT_ID", "")
-        CLIENT_SECRET = st.secrets.get("GOOGLE_CLIENT_SECRET", "")
-        REDIRECT_URI = st.secrets.get("REDIRECT_URI", "http://localhost:8501")
-
-        if CLIENT_ID and CLIENT_SECRET:
-            oauth2 = OAuth2Component(
-                client_id=CLIENT_ID,
-                client_secret=CLIENT_SECRET,
-                authorize_endpoint="https://accounts.google.com/o/oauth2/auth",
-                token_endpoint="https://oauth2.googleapis.com/token",
-                refresh_token_endpoint="https://oauth2.googleapis.com/token",
-                revoke_token_endpoint="https://oauth2.googleapis.com/revoke",
-            )
-            result = oauth2.authorize_button(
-                name="Continuar con Google",
-                icon="https://www.google.com.tw/favicon.ico",
-                redirect_uri=REDIRECT_URI,
-                scope="openid email profile",
-                key="google_oauth",
-                extras_params={"prompt": "select_account"},
-                use_container_width=True,
-                pkce="S256",
-            )
-            if result and "token" in result:
-                from auth import process_login_token
-                process_login_token(result["token"])
-                st.rerun()
+        
+        # Login nativo de Streamlit
+        if st.button("🌐 Continuar con Google", type="primary", use_container_width=True):
+            st.login(provider="google")
+        
         st.markdown('</div>', unsafe_allow_html=True)
 
+    # Reglas de puntuación
     st.markdown("---")
     col1, col2, col3, col4, col5 = st.columns(5)
     with col1:
@@ -76,19 +52,26 @@ if not user:
         st.markdown('<div class="rule-card"><div class="rule-pts">10</div><div class="rule-label">pts bonus goleador/MVP final</div></div>', unsafe_allow_html=True)
 
 else:
-    st.markdown(f'<p class="welcome-text">Bienvenido, <strong>{user["name"]}</strong>! 👋</p>', unsafe_allow_html=True)
+    user = get_current_user()
+    render_header()
+    
+    st.markdown(f'<p class="welcome-text">Bienvenido, <strong>{user.get("name", user.get("email", "Usuario"))}</strong>! 👋</p>', unsafe_allow_html=True)
+    
     tab1, tab2, tab3, tab4 = st.tabs(["⚽ Mis Pronósticos", "🏆 Tabla de Posiciones", "📊 Resultados", "🌟 Bonus Final"])
+    
     with tab1:
-        from pages_modules.pronosticos import render_pronosticos
+        from pages.pronosticos import render_pronosticos
         render_pronosticos(user)
     with tab2:
-        from pages_modules.tabla import render_tabla
+        from pages.tabla import render_tabla
         render_tabla()
     with tab3:
-        from pages_modules.resultados import render_resultados
+        from pages.resultados import render_resultados
         render_resultados(user)
     with tab4:
-        from pages_modules.bonus import render_bonus
+        from pages.bonus import render_bonus
         render_bonus(user)
+
+    logout()  # Botón de cerrar sesión
 
 render_footer()
