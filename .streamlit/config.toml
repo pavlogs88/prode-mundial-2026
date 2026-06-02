@@ -4,16 +4,14 @@ primaryColor = "#FFD700"
 backgroundColor = "#0a0a0a"
 secondaryBackgroundColor = "#111111"
 textColor = "#FFFFFF"
-font = "sans serif"
 
 [server]
 headless = true
 enableCORS = false
 enableXsrfProtection = false
-cookieSecret = "prode-mundial-2026-secret-key-cambiar"
-
-[client]
-showErrorDetails = false
+maxUploadSize = 10
 
 [browser]
 gatherUsageStats = false
+serverAddress = "mundial2026-loschangos.streamlit.app"
+serverPort = 443
