@@ -1,6 +1,9 @@
 import streamlit as st
 from auth import init_auth, get_current_user, logout
 from ui_components import render_header, render_footer
+import uuid
+from streamlit_oauth import OAuth2Component
+import uuid
 
 st.set_page_config(
     page_title="Prode Mundial 2026 🏆",
@@ -8,6 +11,10 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+
+if "oauth_state" not in st.session_state:
+    st.session_state.oauth_state = str(uuid.uuid4())
 
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
@@ -46,19 +53,32 @@ if not user:
                 refresh_token_endpoint="https://oauth2.googleapis.com/token",
                 revoke_token_endpoint="https://oauth2.googleapis.com/revoke",
             )
+
+            # Fix importante: Generar un state único
+            if "oauth_state" not in st.session_state:
+                st.session_state.oauth_state = str(uuid.uuid4())
+
             result = oauth2.authorize_button(
                 name="Continuar con Google",
                 icon="https://www.google.com.tw/favicon.ico",
                 redirect_uri=REDIRECT_URI,
                 scope="openid email profile",
                 key="google_oauth",
-                extras_params={"prompt": "select_account"},
+                extras_params={
+                    "prompt": "select_account", 
+                    "access_type": "offline"
+                },
                 use_container_width=True,
                 pkce="S256",
+                state=st.session_state.oauth_state,   # ← Esto ayuda
             )
+
             if result and "token" in result:
                 from auth import process_login_token
                 process_login_token(result["token"])
+                # Limpiar state después de login exitoso
+                if "oauth_state" in st.session_state:
+                    del st.session_state.oauth_state
                 st.rerun()
         else:
             st.error("Faltan credenciales de Google en secrets.toml")
