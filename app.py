@@ -45,28 +45,7 @@ if not user:
         st.markdown("Compartí el link con tus amigos para que se unan al prode.")
 
         auth_url = get_google_auth_url()
-        st.markdown(f'''
-            <a href="{auth_url}" target="_self">
-                <button style="
-                    width:100%;
-                    padding:0.75rem 1rem;
-                    background:white;
-                    color:#333;
-                    border:1px solid #ddd;
-                    border-radius:8px;
-                    font-size:1rem;
-                    font-weight:600;
-                    cursor:pointer;
-                    display:flex;
-                    align-items:center;
-                    justify-content:center;
-                    gap:10px;
-                ">
-                    <img src="https://www.google.com/favicon.ico" width="20"/>
-                    Continuar con Google
-                </button>
-            </a>
-        ''', unsafe_allow_html=True)
+        st.link_button("🔑 Continuar con Google", url=auth_url, use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     # Scoring rules
