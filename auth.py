@@ -1,4 +1,5 @@
 import streamlit as st
+import requests
 from database import get_or_create_user
 
 
@@ -11,30 +12,28 @@ def get_current_user():
     return st.session_state.get("user")
 
 
-def try_login_from_streamlit():
-    """Pick up logged-in user from Streamlit's native auth (st.user)."""
-    if st.session_state.get("user"):
-        return  # already logged in
-
+def process_login_token(token: dict):
     try:
-        su = st.experimental_user  # works on Streamlit Cloud
-        if su and getattr(su, "email", None):
-            user = {
-                "id": su.email,  # use email as stable ID
-                "email": su.email,
-                "name": getattr(su, "name", su.email.split("@")[0]),
-                "picture": getattr(su, "avatar_url", ""),
-            }
-            get_or_create_user(user)
-            st.session_state.user = user
-    except Exception:
-        pass  # st.experimental_user not available locally
+        access_token = token.get("access_token")
+        resp = requests.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+            timeout=10,
+        )
+        resp.raise_for_status()
+        info = resp.json()
+        user = {
+            "id": info["id"],
+            "email": info["email"],
+            "name": info.get("name", info["email"].split("@")[0]),
+            "picture": info.get("picture", ""),
+        }
+        get_or_create_user(user)
+        st.session_state.user = user
+    except Exception as e:
+        st.error(f"Error al iniciar sesión: {e}")
 
 
 def logout():
     st.session_state.clear()
-    try:
-        st.logout()
-    except Exception:
-        pass
     st.rerun()
