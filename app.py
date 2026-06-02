@@ -1,4 +1,7 @@
 import streamlit as st
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from auth import login_with_google, get_current_user, logout
 from ui_components import render_header, render_footer
 
