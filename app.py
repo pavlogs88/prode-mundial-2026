@@ -16,6 +16,10 @@ with open("style.css") as f:
 
 user = get_current_user()
 
+# Manejar callback si volvemos de Google
+if "auth_url" in st.session_state:
+    del st.session_state.auth_url
+
 if not user:
     st.markdown("""
     <div class="hero-container">
