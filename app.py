@@ -12,7 +12,7 @@ st.set_page_config(
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ── Process token if present in query params ──
+# ── Handle token in query params (sent by callback.html) ──
 qp = st.query_params
 if "access_token" in qp and not st.session_state.get("user"):
     process_supabase_session(qp["access_token"], qp.get("refresh_token", ""))
