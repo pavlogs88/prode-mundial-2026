@@ -30,8 +30,28 @@ except Exception as e:
     st.write("SESSION ERROR:")
     st.write(str(e))
 
+st.write("SUPABASE VERSION:", supabase.__version__)
+
 user = get_current_user()
 render_header()
+
+qp = st.query_params
+
+if "code" in qp:
+    st.write("CODE:", qp["code"])
+
+    try:
+        supabase = get_supabase()
+
+        result = supabase.auth.exchange_code_for_session(
+            qp["code"]
+        )
+
+        st.write("RESULT:")
+        st.write(result)
+
+    except Exception as e:
+        st.error(f"ERROR EXCHANGE: {e}")
 
 if not user:
     st.markdown("""
