@@ -33,17 +33,24 @@ def process_supabase_session(access_token, refresh_token=None):
 
 def get_current_user():
     supabase = get_supabase()
+
     try:
         user = supabase.auth.get_user()
+
+        st.write("RAW USER:", user)
+
         if user and user.user:
             return {
                 "id": user.user.id,
                 "email": user.user.email,
-                "name": user.user.user_metadata.get("full_name") or user.user.email.split("@")[0],
+                "name": user.user.user_metadata.get("full_name")
+                        or user.user.email.split("@")[0],
                 "picture": user.user.user_metadata.get("avatar_url", "")
             }
-    except:
-        pass
+
+    except Exception as e:
+        st.error(f"GET USER ERROR: {e}")
+
     return None
 
 def logout():
