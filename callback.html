@@ -1,21 +1,25 @@
 <!DOCTYPE html>
 <html>
-<head><title>Redirigiendo...</title></head>
+<head><title>Redirigiendo al Prode...</title></head>
 <body>
-<p>Procesando login...</p>
-<script>
-  const hash = window.location.hash.substring(1);
-  if (hash && hash.includes('access_token')) {
-    const params = new URLSearchParams(hash);
-    const access_token = params.get('access_token');
-    const refresh_token = params.get('refresh_token') || '';
-    
-    // Redirigir a la app principal con los tokens
-    window.location.href = `https://mundial2026-loschangos.streamlit.app/?access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}`;
-  } else {
-    // Error o sin token
-    window.location.href = `https://mundial2026-loschangos.streamlit.app/?error=auth_failed`;
-  }
-</script>
+    <p>Procesando autenticación con Google...</p>
+    <script>
+        console.log("Hash recibido:", window.location.hash);
+        
+        const hash = window.location.hash.substring(1);
+        if (hash && hash.includes('access_token')) {
+            const params = new URLSearchParams(hash);
+            const access_token = params.get('access_token');
+            const refresh_token = params.get('refresh_token') || '';
+            
+            if (access_token) {
+                window.location.href = `https://mundial2026-loschangos.streamlit.app/?access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}`;
+            } else {
+                window.location.href = `https://mundial2026-loschangos.streamlit.app/?error=token_missing`;
+            }
+        } else {
+            window.location.href = `https://mundial2026-loschangos.streamlit.app/?error=no_hash`;
+        }
+    </script>
 </body>
 </html>
