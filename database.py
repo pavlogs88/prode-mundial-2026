@@ -30,6 +30,7 @@ def _get_client():
         if not creds_info:
             raise ValueError("GCP_SERVICE_ACCOUNT not found in secrets")
         if isinstance(creds_info, str):
+            st.write(type(creds_info))
             creds_info = json.loads(creds_info)
         creds = Credentials.from_service_account_info(dict(creds_info), scopes=SCOPES)
         _client = gspread.authorize(creds)
