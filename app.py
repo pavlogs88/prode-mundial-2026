@@ -12,28 +12,8 @@ st.set_page_config(
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ── Handle token from URL hash ──
-# Supabase redirects back with #access_token=... in the URL
-# We use st.iframe to read it from the top frame
+# ── Process token if present in query params ──
 qp = st.query_params
-
-if "access_token" not in qp:
-    st.iframe("""
-    <script>
-        const hash = window.top.location.hash;
-        if (hash && hash.includes('access_token')) {
-            const p = new URLSearchParams(hash.substring(1));
-            const at = p.get('access_token');
-            const rt = p.get('refresh_token') || '';
-            if (at) {
-                const base = window.top.location.href.split('#')[0].split('?')[0];
-                window.top.location.href = base + '?access_token=' + encodeURIComponent(at) + '&refresh_token=' + encodeURIComponent(rt);
-            }
-        }
-    </script>
-    """, height=0)
-
-# ── Process token if present ──
 if "access_token" in qp and not st.session_state.get("user"):
     process_supabase_session(qp["access_token"], qp.get("refresh_token", ""))
     st.query_params.clear()
@@ -51,7 +31,6 @@ if not user:
     </div>
     """, unsafe_allow_html=True)
 
-    # Pre-generate Google auth URL so we can use st.link_button (opens in same tab)
     try:
         supabase = get_supabase()
         REDIRECT_URI = st.secrets.get("REDIRECT_URI", "http://localhost:8501")
@@ -59,25 +38,23 @@ if not user:
             "provider": "google",
             "options": {
                 "redirect_to": REDIRECT_URI,
-                "skip_browser_redirect": True,  # don't auto-redirect, just return URL
+                "skip_browser_redirect": True,
             }
         })
         google_url = response.url if response else None
     except Exception as e:
         google_url = None
-        st.error(f"Error conectando con Supabase: {e}")
+        st.error(f"Error: {e}")
 
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown("### 🔐 Ingresá con tu cuenta Google")
         st.markdown("Compartí el link con tus amigos para que se unan al prode.")
-
         if google_url:
             st.link_button("🌐 Continuar con Google", url=google_url, use_container_width=True)
         else:
-            st.warning("No se pudo generar el link de login. Verificá la configuración de Supabase.")
-
+            st.warning("No se pudo generar el link de login.")
         st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("---")
