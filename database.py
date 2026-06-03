@@ -25,20 +25,19 @@ _spreadsheet = None
 
 def _get_client():
     global _client
+
     if _client is None:
         creds_info = st.secrets.get("GCP_SERVICE_ACCOUNT")
-        if not creds_info:
-            raise ValueError("GCP_SERVICE_ACCOUNT not found in secrets")
-        if isinstance(creds_info, str):
-          try:
-            creds_info = json.loads(creds_info)
-          except Exception as e:
-            st.error(f"JSON ERROR: {e}")
-            st.code(creds_info[:1000])
-          raise
-          
-        creds = Credentials.from_service_account_info(dict(creds_info), scopes=SCOPES)
+
+        st.write("TIPO:", type(creds_info))
+
+        creds = Credentials.from_service_account_info(
+            dict(creds_info),
+            scopes=SCOPES
+        )
+
         _client = gspread.authorize(creds)
+
     return _client
 
 
