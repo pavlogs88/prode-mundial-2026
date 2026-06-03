@@ -44,7 +44,9 @@ if "code" in qp:
         supabase = get_supabase()
 
         result = supabase.auth.exchange_code_for_session(
-            qp["code"]
+            {
+            "auth_code": qp["code"]
+            }
         )
 
         st.write("RESULT:")
