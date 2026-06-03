@@ -14,10 +14,24 @@ with open("style.css") as f:
 
 # ── Handle token in query params (sent by callback.html) ──
 qp = st.query_params
-if "access_token" in qp and not st.session_state.get("user"):
-    process_supabase_session(qp["access_token"], qp.get("refresh_token", ""))
-    st.query_params.clear()
-    st.rerun()
+
+if "code" in qp:
+    try:
+        supabase = get_supabase()
+
+        st.write("Código recibido:", qp["code"])
+
+        result = supabase.auth.exchange_code_for_session(
+            {"auth_code": qp["code"]}
+        )
+
+        st.write("Resultado:", result)
+
+        st.query_params.clear()
+        st.rerun()
+
+    except Exception as e:
+        st.error(f"Error intercambiando código: {e}")
     
 st.write("Query Params:", dict(st.query_params))
 st.write("USER:", get_current_user())
