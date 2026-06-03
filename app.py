@@ -42,7 +42,8 @@ if "code" in qp:
 
     try:
         supabase = get_supabase()
-
+        st.write("URL:", st.secrets["SUPABASE_URL"])
+        st.write("KEY LEN:", len(st.secrets["SUPABASE_ANON_KEY"]))
         result = supabase.auth.exchange_code_for_session(
             {
             "auth_code": qp["code"]
