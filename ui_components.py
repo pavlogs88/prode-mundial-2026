@@ -4,7 +4,6 @@ from auth import logout
 
 def render_header():
     user = st.session_state.get("user")
-
     with st.sidebar:
         st.markdown("""
         <div style='text-align:center;padding:1rem 0'>
@@ -37,7 +36,6 @@ def render_header():
             - 🏅 Bonus MVP: **10 pts**
             """)
             st.markdown("---")
-
             if st.button("🚪 Cerrar sesión", use_container_width=True):
                 logout()
 
