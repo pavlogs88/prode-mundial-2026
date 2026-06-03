@@ -32,6 +32,12 @@ def _get_client():
         if isinstance(creds_info, str):
             st.write(type(creds_info))
             creds_info = json.loads(creds_info)
+        st.write("Tipo:", type(creds_info))
+
+        if isinstance(creds_info, dict):
+          st.write("Keys:", list(creds_info.keys()))
+        elif isinstance(creds_info, str):
+          st.write("Primeros 200 chars:", creds_info[:200])
         creds = Credentials.from_service_account_info(dict(creds_info), scopes=SCOPES)
         _client = gspread.authorize(creds)
     return _client
