@@ -24,7 +24,8 @@ if "code" in qp:
         result = supabase.auth.exchange_code_for_session(
             {"auth_code": qp["code"]}
         )
-
+        st.write(result.session)
+        st.write(result.user)
         st.write("Resultado:", result)
 
         st.query_params.clear()
