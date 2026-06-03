@@ -31,7 +31,6 @@ except Exception as e:
     st.write("SESSION ERROR:")
     st.write(str(e))
 
-st.write("SUPABASE VERSION:", supabase.__version__)
 
 user = get_current_user()
 render_header()
