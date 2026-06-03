@@ -22,7 +22,18 @@ with open("style.css") as f:
 qp = st.query_params
 
 
+# ── DEBUG SUPABASE ──
+supabase = get_supabase()
+
+try:
+    session = supabase.auth.get_session()
+    st.write("SESSION:", session)
+except Exception as e:
+    st.error(f"SESSION ERROR: {e}")
+
+# Obtener usuario
 user = get_current_user()
+
 render_header()
 
 if not user:
