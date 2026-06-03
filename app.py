@@ -21,6 +21,7 @@ with open("style.css") as f:
 # ── Handle token in query params (sent by callback.html) ──    
 qp = st.query_params
 
+st.write("QUERY PARAMS:", dict(qp))
 
 # ── DEBUG SUPABASE ──
 supabase = get_supabase()
