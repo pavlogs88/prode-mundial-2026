@@ -18,7 +18,9 @@ if "access_token" in qp and not st.session_state.get("user"):
     process_supabase_session(qp["access_token"], qp.get("refresh_token", ""))
     st.query_params.clear()
     st.rerun()
-
+    
+st.write("Query Params:", dict(st.query_params))
+st.write("USER:", get_current_user())
 user = get_current_user()
 render_header()
 
