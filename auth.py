@@ -10,7 +10,7 @@ def get_supabase() -> Client:
 
 def login_with_google():
     supabase = get_supabase()
-    redirect_url = "https://mundial2026-loschangos.streamlit.app/callback"   # ← Exacto
+    redirect_url = "https://mundial2026-loschangos.streamlit.ap"   # ← Exacto
 
     response = supabase.auth.sign_in_with_oauth(
         provider="google",
