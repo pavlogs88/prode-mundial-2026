@@ -34,13 +34,15 @@ if not user:
     try:
         supabase = get_supabase()
         REDIRECT_URI = st.secrets.get("REDIRECT_URI", "http://localhost:8501")
-        response = supabase.auth.sign_in_with_oauth({
-            "provider": "google",
-            "options": {
-                "redirect_to": REDIRECT_URI,
-                "skip_browser_redirect": True,
+        response = supabase.auth.sign_in_with_oauth(
+            {
+                    "provider": "google",
+                    "options": {
+                            "redirect_to": st.secrets["REDIRECT_URI"],
+                            "skip_browser_redirect": True,
+                             }
             }
-        })
+        )
         google_url = response.url if response else None
     except Exception as e:
         google_url = None
