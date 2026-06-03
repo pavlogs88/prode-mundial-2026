@@ -2,21 +2,19 @@
 <html>
 <head><title>Redirigiendo...</title></head>
 <body>
-<p>Iniciando sesión, por favor espera...</p>
+<p>Procesando login...</p>
 <script>
-  // Supabase puts tokens in the URL hash after OAuth
-  const hash = window.location.hash;
+  const hash = window.location.hash.substring(1);
   if (hash && hash.includes('access_token')) {
-    const params = new URLSearchParams(hash.substring(1));
+    const params = new URLSearchParams(hash);
     const access_token = params.get('access_token');
     const refresh_token = params.get('refresh_token') || '';
-    // Redirect to Streamlit app with tokens as query params
-    const appUrl = 'https://mundial2026-loschangos.streamlit.app/';
-    window.location.href = appUrl + '?access_token=' + encodeURIComponent(access_token) + '&refresh_token=' + encodeURIComponent(refresh_token);
-  } else if (window.location.search.includes('error')) {
-    document.body.innerHTML = '<p>Error de autenticación. <a href="https://mundial2026-loschangos.streamlit.app">Volver</a></p>';
+    
+    // Redirigir a la app principal con los tokens
+    window.location.href = `https://mundial2026-loschangos.streamlit.app/?access_token=${encodeURIComponent(access_token)}&refresh_token=${encodeURIComponent(refresh_token)}`;
   } else {
-    window.location.href = 'https://mundial2026-loschangos.streamlit.app/';
+    // Error o sin token
+    window.location.href = `https://mundial2026-loschangos.streamlit.app/?error=auth_failed`;
   }
 </script>
 </body>
