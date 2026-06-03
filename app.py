@@ -15,26 +15,7 @@ with open("style.css") as f:
 # ── Handle token in query params (sent by callback.html) ──
 qp = st.query_params
 
-if "code" in qp:
-    try:
-        supabase = get_supabase()
-
-        st.write("Código recibido:", qp["code"])
-        st.write("SUPABASE_URL:", st.secrets.get("SUPABASE_URL"))
-        st.write("ANON_KEY primeros 20:", st.secrets.get("SUPABASE_ANON_KEY", "")[:20])
-        result = supabase.auth.exchange_code_for_session(
-            {"auth_code": qp["code"]}
-        )
-        st.write(result.session)
-        st.write(result.user)
-        st.write("Resultado:", result)
-
-        st.query_params.clear()
-        st.rerun()
-
-    except Exception as e:
-        st.error(f"Error intercambiando código: {e}")
-    
+   
 st.write("Query Params:", dict(st.query_params))
 st.write("USER:", get_current_user())
 user = get_current_user()
