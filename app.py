@@ -2,12 +2,6 @@ import streamlit as st
 from auth import get_supabase, get_current_user, process_supabase_session, logout
 from ui_components import render_header, render_footer
 import supabase
-import pkg_resources
-
-st.write(
-    pkg_resources.get_distribution("supabase").version
-)
-
 import importlib.metadata
 
 st.write(
