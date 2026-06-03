@@ -10,27 +10,25 @@ def get_supabase() -> Client:
 
 def login_with_google():
     supabase = get_supabase()
-    redirect_url = st.secrets["REDIRECT_URI"] + "/callback"   # ← Importante: /callback
+    redirect_url = "https://mundial2026-loschangos.streamlit.app/callback"   # ← Exacto
 
-    try:
-        response = supabase.auth.sign_in_with_oauth(
-            provider="google",
-            options={
-                "redirect_to": redirect_url,
-            }
-        )
-        st.markdown(f'<meta http-equiv="refresh" content="0; url={response.url}">', unsafe_allow_html=True)
-        st.stop()
-    except Exception as e:
-        st.error(f"Error generando login: {e}")
+    response = supabase.auth.sign_in_with_oauth(
+        provider="google",
+        options={"redirect_to": redirect_url}
+    )
+    st.markdown(f'<meta http-equiv="refresh" content="0; url={response.url}">', unsafe_allow_html=True)
+    st.stop()
 
-def process_supabase_session(access_token: str, refresh_token: str = None):
-    supabase = get_supabase()
+def process_supabase_session(access_token, refresh_token=None):
+    if not access_token:
+        return
     try:
+        supabase = get_supabase()
         supabase.auth.set_session(access_token, refresh_token)
         st.session_state.user = get_current_user()
+        st.success("✅ Login exitoso!")
     except Exception as e:
-        st.error(f"Error procesando sesión: {e}")
+        st.error(f"Error en sesión: {e}")
 
 def get_current_user():
     supabase = get_supabase()
@@ -48,7 +46,7 @@ def get_current_user():
     return None
 
 def logout():
-    if st.sidebar.button("🚪 Cerrar Sesión", use_container_width=True):
+    if st.sidebar.button("🚪 Cerrar Sesión"):
         get_supabase().auth.sign_out()
         st.session_state.clear()
         st.rerun()
