@@ -1,24 +1,48 @@
 import streamlit as st
-import sys
-import os
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
-from auth import login_with_google, get_current_user, logout
+import streamlit.components.v1 as components
+from auth import get_supabase, get_current_user, process_supabase_session, logout
 from ui_components import render_header, render_footer
 
 st.set_page_config(
     page_title="Prode Mundial 2026 🏆",
     page_icon="⚽",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-user = get_current_user()
+# ── Handle token from URL hash (Supabase sends #access_token=... after OAuth) ──
+# A small JS snippet reads the hash and posts it back as a query param
+qp = st.query_params
+if "access_token" not in qp:
+    components.html("""
+    <script>
+    const hash = window.location.hash;
+    if (hash && hash.includes("access_token")) {
+        const params = new URLSearchParams(hash.substring(1));
+        const access_token = params.get("access_token");
+        const refresh_token = params.get("refresh_token") || "";
+        if (access_token) {
+            const url = new URL(window.parent.location.href);
+            url.hash = "";
+            url.searchParams.set("access_token", access_token);
+            url.searchParams.set("refresh_token", refresh_token);
+            window.parent.location.replace(url.toString());
+        }
+    }
+    </script>
+    """, height=0)
 
-# Manejar callback si volvemos de Google
-if "auth_url" in st.session_state:
-    del st.session_state.auth_url
+# ── Process token if present in query params ──
+if "access_token" in qp and not st.session_state.get("user"):
+    process_supabase_session(qp["access_token"], qp.get("refresh_token", ""))
+    st.query_params.clear()
+    st.rerun()
+
+user = get_current_user()
+render_header()
 
 if not user:
     st.markdown("""
@@ -33,27 +57,32 @@ if not user:
     with col2:
         st.markdown('<div class="login-card">', unsafe_allow_html=True)
         st.markdown("### 🔐 Ingresá con tu cuenta Google")
-        
+        st.markdown("Compartí el link con tus amigos para que se unan al prode.")
+
         if st.button("🌐 Continuar con Google", type="primary", use_container_width=True):
-            login_with_google()
-        
+            supabase = get_supabase()
+            REDIRECT_URI = st.secrets.get("REDIRECT_URI", "http://localhost:8501")
+            response = supabase.auth.sign_in_with_oauth({
+                "provider": "google",
+                "options": {"redirect_to": REDIRECT_URI}
+            })
+            if response and response.url:
+                st.markdown(f'<meta http-equiv="refresh" content="0; url={response.url}">', unsafe_allow_html=True)
+                st.markdown(f'<script>window.location.href="{response.url}"</script>', unsafe_allow_html=True)
+                st.link_button("👉 Hacer click si no redirige automáticamente", url=response.url, use_container_width=True)
+
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # Reglas de puntuación
     st.markdown("---")
     cols = st.columns(5)
-    rules = [("3","resultado exacto"), ("1","ganador/empate"), ("1","goles de un equipo"), 
-             ("0.5","diferencia de goles"), ("10","bonus goleador/MVP")]
+    rules = [("3","resultado exacto"),("1","ganador/empate"),("1","goles de un equipo"),("0.5","diferencia de goles"),("10","bonus goleador/MVP")]
     for col, (pts, label) in zip(cols, rules):
         with col:
             st.markdown(f'<div class="rule-card"><div class="rule-pts">{pts}</div><div class="rule-label">pts por {label}</div></div>', unsafe_allow_html=True)
 
 else:
-    render_header()
-    st.markdown(f"**Bienvenido, {user['name']}** 👋", unsafe_allow_html=True)
-
+    st.markdown(f'<p class="welcome-text">Bienvenido, <strong>{user["name"]}</strong>! 👋</p>', unsafe_allow_html=True)
     tab1, tab2, tab3, tab4 = st.tabs(["⚽ Mis Pronósticos", "🏆 Tabla de Posiciones", "📊 Resultados", "🌟 Bonus Final"])
-
     with tab1:
         from pages_modules.pronosticos import render_pronosticos
         render_pronosticos(user)
@@ -66,7 +95,5 @@ else:
     with tab4:
         from pages_modules.bonus import render_bonus
         render_bonus(user)
-
-    logout()
 
 render_footer()
