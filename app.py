@@ -13,29 +13,26 @@ st.set_page_config(
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ── Handle token from URL hash (Supabase sends #access_token=... after OAuth) ──
-# A small JS snippet reads the hash and posts it back as a query param
+# ── Handle token from URL hash via iframe component ──
 qp = st.query_params
 if "access_token" not in qp:
-    components.html("""
+    token_html = """
     <script>
-    const hash = window.location.hash;
-    if (hash && hash.includes("access_token")) {
-        const params = new URLSearchParams(hash.substring(1));
-        const access_token = params.get("access_token");
-        const refresh_token = params.get("refresh_token") || "";
-        if (access_token) {
-            const url = new URL(window.parent.location.href);
-            url.hash = "";
-            url.searchParams.set("access_token", access_token);
-            url.searchParams.set("refresh_token", refresh_token);
-            window.parent.location.replace(url.toString());
+        const hash = window.top.location.hash || window.location.hash;
+        if (hash && hash.includes('access_token')) {
+            const params = new URLSearchParams(hash.substring(1));
+            const at = params.get('access_token');
+            const rt = params.get('refresh_token') || '';
+            if (at) {
+                const base = window.top.location.href.split('#')[0].split('?')[0];
+                window.top.location.href = base + '?access_token=' + encodeURIComponent(at) + '&refresh_token=' + encodeURIComponent(rt);
+            }
         }
-    }
     </script>
-    """, height=0)
+    """
+    components.html(token_html, height=0)
 
-# ── Process token if present in query params ──
+# ── Process token ──
 if "access_token" in qp and not st.session_state.get("user"):
     process_supabase_session(qp["access_token"], qp.get("refresh_token", ""))
     st.query_params.clear()
@@ -67,9 +64,12 @@ if not user:
                 "options": {"redirect_to": REDIRECT_URI}
             })
             if response and response.url:
-                st.markdown(f'<meta http-equiv="refresh" content="0; url={response.url}">', unsafe_allow_html=True)
-                st.markdown(f'<script>window.location.href="{response.url}"</script>', unsafe_allow_html=True)
-                st.link_button("👉 Hacer click si no redirige automáticamente", url=response.url, use_container_width=True)
+                # Use components.html to do a top-level redirect (bypasses iframe)
+                components.html(f"""
+                <script>
+                    window.top.location.href = "{response.url}";
+                </script>
+                """, height=0)
 
         st.markdown('</div>', unsafe_allow_html=True)
 
