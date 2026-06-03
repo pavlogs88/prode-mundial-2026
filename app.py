@@ -14,17 +14,6 @@ with open("style.css") as f:
 
 # ── Handle token in query params (sent by callback.html) ──
 qp = st.query_params
-
-supabase = get_supabase()
-
-try:
-    session = supabase.auth.get_session()
-    st.write("SESSION:", session)
-except Exception as e:
-    st.write("SESSION ERROR:", e)
-   
-st.write("Query Params:", dict(st.query_params))
-st.write("USER:", get_current_user())
 user = get_current_user()
 render_header()
 
