@@ -1,6 +1,7 @@
 import streamlit as st
 from auth import get_supabase, get_current_user, process_supabase_session, logout
 from ui_components import render_header, render_footer
+import supabase
 
 st.set_page_config(
     page_title="Prode Mundial 2026 🏆",
