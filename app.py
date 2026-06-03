@@ -20,7 +20,8 @@ if "code" in qp:
         supabase = get_supabase()
 
         st.write("Código recibido:", qp["code"])
-
+        st.write("SUPABASE_URL:", st.secrets.get("SUPABASE_URL"))
+        st.write("ANON_KEY primeros 20:", st.secrets.get("SUPABASE_ANON_KEY", "")[:20])
         result = supabase.auth.exchange_code_for_session(
             {"auth_code": qp["code"]}
         )
