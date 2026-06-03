@@ -12,8 +12,24 @@ st.set_page_config(
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ── Handle token in query params (sent by callback.html) ──
+# ── Handle token in query params (sent by callback.html) ──    
 qp = st.query_params
+
+st.write("Query Params:")
+st.write(dict(st.query_params))
+
+if "code" in st.query_params:
+    st.success("CODE DETECTADO")
+supabase = get_supabase()
+
+try:
+    session = supabase.auth.get_session()
+    st.write("SESSION:")
+    st.write(session)
+except Exception as e:
+    st.write("SESSION ERROR:")
+    st.write(str(e))
+
 user = get_current_user()
 render_header()
 
