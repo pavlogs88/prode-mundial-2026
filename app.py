@@ -21,45 +21,9 @@ with open("style.css") as f:
 # ── Handle token in query params (sent by callback.html) ──    
 qp = st.query_params
 
-st.write("Query Params:")
-st.write(dict(st.query_params))
-
-if "code" in st.query_params:
-    st.success("CODE DETECTADO")
-supabase = get_supabase()
-
-try:
-    session = supabase.auth.get_session()
-    st.write("SESSION:")
-    st.write(session)
-except Exception as e:
-    st.write("SESSION ERROR:")
-    st.write(str(e))
-
 
 user = get_current_user()
 render_header()
-
-qp = st.query_params
-
-if "code" in qp:
-    st.write("CODE:", qp["code"])
-
-    try:
-        supabase = get_supabase()
-        st.write("URL:", st.secrets["SUPABASE_URL"])
-        st.write("KEY LEN:", len(st.secrets["SUPABASE_ANON_KEY"]))
-        result = supabase.auth.exchange_code_for_session(
-            {
-            "auth_code": qp["code"]
-            }
-        )
-
-        st.write("RESULT:")
-        st.write(result)
-
-    except Exception as e:
-        st.error(f"ERROR EXCHANGE: {e}")
 
 if not user:
     st.markdown("""
@@ -78,7 +42,6 @@ if not user:
                     "provider": "google",
                     "options": {
                             "redirect_to": st.secrets["REDIRECT_URI"],
-                            "skip_browser_redirect": True,
                              }
             }
         )
