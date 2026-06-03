@@ -15,7 +15,7 @@ def login_with_google():
     response = supabase.auth.sign_in_with_oauth(
         provider="google",
         options={
-            "redirect_to": "https://okshrrfgxoqzqwrbdnku.supabase.co/auth/v1/callback"
+            "redirect_to": "https://mundial2026-loschangos.streamlit.app/"
         }
     )
     
