@@ -27,23 +27,24 @@ if "code" in qp:
 
     code = qp["code"]
 
-    st.error(f"CODE DETECTADO: {code}")
-
-    supabase = get_supabase()
+    st.write("CODE:", code)
 
     try:
-        import inspect
+        supabase = get_supabase()
 
-        st.code(
-            str(
-                inspect.signature(
-                    supabase.auth.exchange_code_for_session
-                )
-            )
+        result = supabase.auth.exchange_code_for_session(
+            {
+                "auth_code": code
+            }
         )
 
+        st.success("EXCHANGE OK")
+        st.write(result)
+
     except Exception as e:
-        st.error(e)
+        st.error(f"ERROR EXCHANGE: {e}")
+
+
 # Obtener usuario
 user = get_current_user()
 
