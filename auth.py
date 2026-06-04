@@ -37,8 +37,6 @@ def get_current_user():
     try:
         user = supabase.auth.get_user()
 
-        st.write("RAW USER:", user)
-
         if user and user.user:
             return {
                 "id": user.user.id,
