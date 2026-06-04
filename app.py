@@ -24,7 +24,26 @@ qp = st.query_params
 st.write("QUERY PARAMS:", dict(qp))
 
 if "code" in qp:
-    st.error(f"CODE DETECTADO: {qp['code']}")
+
+    code = qp["code"]
+
+    st.error(f"CODE DETECTADO: {code}")
+
+    supabase = get_supabase()
+
+    try:
+        import inspect
+
+        st.code(
+            str(
+                inspect.signature(
+                    supabase.auth.exchange_code_for_session
+                )
+            )
+        )
+
+    except Exception as e:
+        st.error(e)
 # Obtener usuario
 user = get_current_user()
 
