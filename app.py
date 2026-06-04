@@ -29,14 +29,18 @@ if "code" in qp:
     st.write("CODE DETECTADO:", code)
 
     try:
+
         supabase = get_supabase()
 
-        result = supabase.auth.exchange_code_for_session(code)
+        result = supabase.auth.exchange_code_for_session(
+            {
+                "auth_code": code
+            }
+        )
 
-        st.write("EXCHANGE RESULT:", result)
+        st.write("RESULT:", result)
 
         st.query_params.clear()
-
         st.rerun()
 
     except Exception as e:
