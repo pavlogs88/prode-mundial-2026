@@ -1,33 +1,49 @@
 <!DOCTYPE html>
 <html>
-<head><title>Iniciando sesión...</title></head>
+<head>
+  <title>Iniciando sesión...</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
 <body>
-<p>Iniciando sesión, por favor espera...</p>
+<p>Iniciando sesión, espera un momento...</p>
 <script>
-  const hash = window.location.hash;
-  const search = window.location.search;
-  const appUrl = 'https://mundial2026-loschangos.streamlit.app/';
+  const SUPABASE_URL = 'https://okshrrfgxoqzqwrbdnku.supabase.co';
+  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9rc2hycmZneG9xenF3cmJkbmt1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MjU3MzcsImV4cCI6MjA5NjAwMTczN30.LzAlKWOJCwcwAsm2HOpUNpKeCef1IobIy489Srb3g0E';
+  const APP_URL = 'https://mundial2026-loschangos.streamlit.app/';
 
-  // Case 1: token in hash (Supabase implicit flow)
-  if (hash && hash.includes('access_token')) {
-    const p = new URLSearchParams(hash.substring(1));
-    const at = p.get('access_token');
-    const rt = p.get('refresh_token') || '';
-    window.location.href = appUrl + '?access_token=' + encodeURIComponent(at) + '&refresh_token=' + encodeURIComponent(rt);
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Case 2: code in query string (PKCE flow)
-  } else if (search && search.includes('code=')) {
-    const p = new URLSearchParams(search.substring(1));
-    const code = p.get('code');
-    window.location.href = appUrl + '?code=' + encodeURIComponent(code);
-
-  // Case 3: error
-  } else if (search && search.includes('error')) {
-    document.body.innerHTML = '<p>Error de autenticación. <a href="' + appUrl + '">Volver</a></p>';
-
-  } else {
-    window.location.href = appUrl;
+  async function handleCallback() {
+    try {
+      // Let Supabase JS SDK handle the PKCE exchange automatically
+      const { data, error } = await supabase.auth.getSession();
+      
+      if (error) throw error;
+      
+      if (data.session) {
+        const at = data.session.access_token;
+        const rt = data.session.refresh_token || '';
+        window.location.href = APP_URL + '?access_token=' + encodeURIComponent(at) + '&refresh_token=' + encodeURIComponent(rt);
+      } else {
+        // Try exchanging code manually if session not ready yet
+        const params = new URLSearchParams(window.location.search);
+        const code = params.get('code');
+        if (code) {
+          const { data: exchanged, error: exchError } = await supabase.auth.exchangeCodeForSession(code);
+          if (exchError) throw exchError;
+          const at = exchanged.session.access_token;
+          const rt = exchanged.session.refresh_token || '';
+          window.location.href = APP_URL + '?access_token=' + encodeURIComponent(at) + '&refresh_token=' + encodeURIComponent(rt);
+        } else {
+          document.body.innerHTML = '<p>Error: no se recibió código de autorización. <a href="' + APP_URL + '">Volver</a></p>';
+        }
+      }
+    } catch (e) {
+      document.body.innerHTML = '<p>Error: ' + e.message + '. <a href="' + APP_URL + '">Volver</a></p>';
+    }
   }
+
+  handleCallback();
 </script>
 </body>
 </html>
