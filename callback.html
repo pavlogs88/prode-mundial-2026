@@ -1,9 +1,33 @@
 <!DOCTYPE html>
 <html>
-<head><title>Redirigiendo...</title></head>
+<head><title>Iniciando sesión...</title></head>
 <body>
-    <script>
-        window.location.href = "https://mundial2026-loschangos.streamlit.app";
-    </script>
+<p>Iniciando sesión, por favor espera...</p>
+<script>
+  const hash = window.location.hash;
+  const search = window.location.search;
+  const appUrl = 'https://mundial2026-loschangos.streamlit.app/';
+
+  // Case 1: token in hash (Supabase implicit flow)
+  if (hash && hash.includes('access_token')) {
+    const p = new URLSearchParams(hash.substring(1));
+    const at = p.get('access_token');
+    const rt = p.get('refresh_token') || '';
+    window.location.href = appUrl + '?access_token=' + encodeURIComponent(at) + '&refresh_token=' + encodeURIComponent(rt);
+
+  // Case 2: code in query string (PKCE flow)
+  } else if (search && search.includes('code=')) {
+    const p = new URLSearchParams(search.substring(1));
+    const code = p.get('code');
+    window.location.href = appUrl + '?code=' + encodeURIComponent(code);
+
+  // Case 3: error
+  } else if (search && search.includes('error')) {
+    document.body.innerHTML = '<p>Error de autenticación. <a href="' + appUrl + '">Volver</a></p>';
+
+  } else {
+    window.location.href = appUrl;
+  }
+</script>
 </body>
 </html>
