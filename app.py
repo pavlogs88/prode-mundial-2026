@@ -26,6 +26,8 @@ st.write("QUERY PARAMS:", dict(qp))
 # ── DEBUG SUPABASE ──
 supabase = get_supabase()
 
+st.write(dir(supabase.auth))
+
 try:
     session = supabase.auth.get_session()
     st.write("SESSION:", session)
