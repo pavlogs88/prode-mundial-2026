@@ -21,18 +21,26 @@ with open("style.css") as f:
 # ── Handle token in query params (sent by callback.html) ──    
 qp = st.query_params
 
-st.write("QUERY PARAMS:", dict(qp))
+# Procesar callback OAuth de Supabase
+if "code" in qp:
 
-# ── DEBUG SUPABASE ──
-supabase = get_supabase()
+    code = qp["code"]
 
-st.write(dir(supabase.auth))
+    st.write("CODE DETECTADO:", code)
 
-try:
-    session = supabase.auth.get_session()
-    st.write("SESSION:", session)
-except Exception as e:
-    st.error(f"SESSION ERROR: {e}")
+    try:
+        supabase = get_supabase()
+
+        result = supabase.auth.exchange_code_for_session(code)
+
+        st.write("EXCHANGE RESULT:", result)
+
+        st.query_params.clear()
+
+        st.rerun()
+
+    except Exception as e:
+        st.error(f"ERROR EXCHANGE: {e}")
 
 # Obtener usuario
 user = get_current_user()
