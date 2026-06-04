@@ -31,7 +31,7 @@ if "code" in qp:
 
     try:
         supabase = get_supabase()
-
+        st.write("SESSION:", supabase.auth.get_session())
         result = supabase.auth.exchange_code_for_session(
             {
                 "auth_code": code
