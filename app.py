@@ -21,31 +21,6 @@ with open("style.css") as f:
 # ── Handle token in query params (sent by callback.html) ──    
 qp = st.query_params
 
-# Procesar callback OAuth de Supabase
-if "code" in qp:
-
-    code = qp["code"]
-
-    st.write("CODE DETECTADO:", code)
-
-    try:
-
-        supabase = get_supabase()
-
-        result = supabase.auth.exchange_code_for_session(
-            {
-                "auth_code": code
-            }
-        )
-
-        st.write("RESULT:", result)
-
-        st.query_params.clear()
-        st.rerun()
-
-    except Exception as e:
-        st.error(f"ERROR EXCHANGE: {e}")
-
 # Obtener usuario
 user = get_current_user()
 
