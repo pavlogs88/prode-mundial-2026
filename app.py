@@ -1,12 +1,6 @@
 import streamlit as st
 from auth import get_supabase, get_current_user, process_supabase_session, logout
 from ui_components import render_header, render_footer
-import supabase
-import importlib.metadata
-
-st.write(
-    importlib.metadata.version("supabase")
-)
 
 st.set_page_config(
     page_title="Prode Mundial 2026 🏆",
@@ -18,36 +12,35 @@ st.set_page_config(
 with open("style.css") as f:
     st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# ── Handle token in query params (sent by callback.html) ──    
+# ── Handle OAuth callback ──
 qp = st.query_params
 
-st.write("QUERY PARAMS:", dict(qp))
-
-if "code" in qp:
-
-    code = qp["code"]
-
-    st.write("CODE:", code)
-
+if "code" in qp and not st.session_state.get("user"):
     try:
         supabase = get_supabase()
-        st.write("SESSION:", supabase.auth.get_session())
-        result = supabase.auth.exchange_code_for_session(
-            {
-                "auth_code": code
+        result = supabase.auth.exchange_code_for_session({"auth_code": qp["code"]})
+        if result and result.user:
+            user_data = {
+                "id": result.user.id,
+                "email": result.user.email,
+                "name": result.user.user_metadata.get("full_name") or result.user.email.split("@")[0],
+                "picture": result.user.user_metadata.get("avatar_url", ""),
             }
-        )
-
-        st.success("EXCHANGE OK")
-        st.write(result)
-
+            from database import get_or_create_user
+            get_or_create_user(user_data)
+            st.session_state.user = user_data
+        st.query_params.clear()
+        st.rerun()
     except Exception as e:
-        st.error(f"ERROR EXCHANGE: {e}")
+        st.error(f"Error al iniciar sesión: {e}")
+        st.query_params.clear()
 
+elif "access_token" in qp and not st.session_state.get("user"):
+    process_supabase_session(qp["access_token"], qp.get("refresh_token", ""))
+    st.query_params.clear()
+    st.rerun()
 
-# Obtener usuario
 user = get_current_user()
-
 render_header()
 
 if not user:
@@ -62,14 +55,13 @@ if not user:
     try:
         supabase = get_supabase()
         REDIRECT_URI = st.secrets.get("REDIRECT_URI", "http://localhost:8501")
-        response = supabase.auth.sign_in_with_oauth(
-            {
-                    "provider": "google",
-                    "options": {
-                            "redirect_to": st.secrets["REDIRECT_URI"],
-                             }
+        response = supabase.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {
+                "redirect_to": REDIRECT_URI,
+                "skip_browser_redirect": True,
             }
-        )
+        })
         google_url = response.url if response else None
     except Exception as e:
         google_url = None
