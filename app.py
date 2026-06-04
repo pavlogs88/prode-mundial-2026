@@ -21,6 +21,10 @@ with open("style.css") as f:
 # ── Handle token in query params (sent by callback.html) ──    
 qp = st.query_params
 
+st.write("QUERY PARAMS:", dict(qp))
+
+if "code" in qp:
+    st.error(f"CODE DETECTADO: {qp['code']}")
 # Obtener usuario
 user = get_current_user()
 
